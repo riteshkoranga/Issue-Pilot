@@ -19,6 +19,8 @@ model Issue {
   updatedAt   DateTime @updatedAt
 }
 
+
+
 enum Status {
   OPEN
   IN_PROGRESS

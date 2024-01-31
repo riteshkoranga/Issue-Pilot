@@ -1,9 +1,9 @@
 import React from 'react'
 
-const IssuesPage = () => {
+const NewIssuePage = () => {
   return (
-    <div>IssuesPage</div>
+    <div>NewIssuePage</div>
   )
 }
 
-export default IssuesPage
+export default NewIssuePage
