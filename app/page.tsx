@@ -1,102 +1,43 @@
-"use client";
+import prisma from '@/prisma/client';
+import IssueSummary from './IssueSummary';
+import LatestIssues from './LatestIssues';
+import IssueChart from './IssueChart';
+import { Flex, Grid } from '@radix-ui/themes';
+import { Metadata } from 'next';
 
-import { Skeleton } from "@/app/components";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import React from "react";
-import { AiFillBug } from "react-icons/ai";
-import classnames from "classnames";
-import { useSession } from "next-auth/react";
-import {
-  Avatar,
-  Box,
-  Container,
-  DropdownMenu,
-  Flex,
-  Text,
-} from "@radix-ui/themes";
-
-const NavBar = () => {
-  return (
-    <nav className="border-b mb-5 px-5 py-3">
-      <Container>
-        <Flex justify="between">
-          <Flex align="center" gap="3">
-            <Link href="/">
-              <AiFillBug />
-            </Link>
-            <NavLinks />
-          </Flex>
-          <AuthStatus />
-        </Flex>
-      </Container>
-    </nav>
-  );
-};
-
-const NavLinks = () => {
-  const currentPath = usePathname();
-
-  const links = [
-    { label: "Dashboard", href: "/" },
-    { label: "Issues", href: "/issues/list" },
-  ];
+export default async function Home() {
+  const open = await prisma.issue.count({
+    where: { status: 'OPEN' },
+  });
+  const inProgress = await prisma.issue.count({
+    where: { status: 'IN_PROGRESS' },
+  });
+  const closed = await prisma.issue.count({
+    where: { status: 'CLOSED' },
+  });
 
   return (
-    <ul className="flex space-x-6">
-      {links.map((link) => (
-        <li key={link.href}>
-          <Link
-            className={classnames({
-              "nav-link": true,
-              "!text-zinc-900": link.href === currentPath,
-            })}
-            href={link.href}
-          >
-            {link.label}
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <Grid columns={{ initial: '1', md: '2' }} gap="5">
+      <Flex direction="column" gap="5">
+        <IssueSummary
+          open={open}
+          inProgress={inProgress}
+          closed={closed}
+        />
+        <IssueChart
+          open={open}
+          inProgress={inProgress}
+          closed={closed}
+        />
+      </Flex>
+      <LatestIssues />
+    </Grid>
   );
+}
+
+export const dynamic = 'force-dynamic'; 
+
+export const metadata: Metadata = {
+  title: 'Issue Tracker - Dashboard',
+  description: 'View a summary of project issues'
 };
-
-const AuthStatus = () => {
-  const { status, data: session } = useSession();
-
-  if (status === "loading") return <Skeleton width="3rem" />;
-
-  if (status === "unauthenticated")
-    return (
-      <Link className="nav-link" href="/api/auth/signin">
-        Login
-      </Link>
-    );
-
-  return (
-    <Box>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
-          <Avatar
-            src={session!.user!.image!}
-            fallback="?"
-            size="2"
-            radius="full"
-            className="cursor-pointer"
-            referrerPolicy="no-referrer"
-          />
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
-          <DropdownMenu.Label>
-            <Text size="2">{session!.user!.email}</Text>
-          </DropdownMenu.Label>
-          <DropdownMenu.Item>
-            <Link href="/api/auth/signout">Log out</Link>
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
-    </Box>
-  );
-};
-
-export default NavBar;
